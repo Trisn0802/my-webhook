@@ -1,0 +1,14 @@
+# Data runtime
+data/*
+!data/.gitignore
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+.qodo
+.kilo
+.claude
+Thumbs.db
+node_modules/
+package-lock.json

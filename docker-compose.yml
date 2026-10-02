@@ -1,0 +1,12 @@
+services:
+  my-webhook:
+    build: .
+    container_name: my-webhook
+    restart: unless-stopped
+    ports:
+      - "3010:80"
+    volumes:
+      # Database bertahan walau container diganti.
+      - ./data:/var/www/html/data
+    environment:
+      - TZ=Asia/Jakarta

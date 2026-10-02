@@ -1,0 +1,127 @@
+/* Penyempurnaan My Webhook — tetap ringan. */
+
+:root {
+  --mw-radius: .6rem;
+}
+
+/* ---------------------------------------------------------------
+   Ikon: memakai font resmi Bootstrap Icons (npm: bootstrap-icons).
+   Semua nama bi-* di https://icons.getbootstrap.com — tinggal pakai,
+   tanpa mendownload SVG satu per satu.
+   --------------------------------------------------------------- */
+
+/* Indikator "Live" di navbar — titik hijau berdenyut. */
+.live-dot {
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background-color: var(--bs-secondary-color, #6c757d);
+  flex-shrink: 0;
+}
+
+.live-dot.is-on {
+  background-color: var(--bs-success, #198754);
+  animation: mw-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mw-live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(25, 135, 84, .45); }
+  50%      { opacity: .6; box-shadow: 0 0 0 .28rem rgba(25, 135, 84, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot.is-on { animation: none; }
+}
+
+/* Logo proyek (navbar + favicon). */
+.brand-logo {
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+body {
+  background-color: var(--bs-body-bg);
+}
+
+.card {
+  border-radius: var(--mw-radius);
+}
+
+.card-header {
+  background-color: transparent;
+}
+
+/* Ikon statistik */
+.stat-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: .75rem;
+  background-color: rgba(13, 110, 253, .12);
+  flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .stat-icon {
+  background-color: rgba(13, 110, 253, .22);
+}
+
+/* Kartu hook */
+.hook-card .endpoint-input {
+  font-size: .78rem;
+}
+
+/* URL endpoint: jangan meluber */
+.input-group .form-control.font-monospace {
+  font-size: .82rem;
+}
+
+/* Log payload */
+.payload-pre {
+  background-color: rgba(0, 0, 0, .05);
+  border: 1px solid var(--bs-border-color);
+  border-radius: .5rem;
+  padding: .75rem 1rem;
+  font-size: .8rem;
+  max-height: 20rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+[data-bs-theme="dark"] .payload-pre {
+  background-color: rgba(255, 255, 255, .04);
+}
+
+.log-card .card-body {
+  padding: .9rem 1rem;
+}
+
+/* Tombol salin sukses */
+.btn-copy.copied {
+  --bs-btn-color: var(--bs-success);
+  --bs-btn-border-color: var(--bs-success);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--bs-success);
+  --bs-btn-hover-border-color: var(--bs-success);
+}
+
+/* Form login/register lebih lapang */
+.auth-card .card-body {
+  padding: 2rem;
+}
+
+@media (max-width: 575.98px) {
+  .stat-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.4rem;
+  }
+}

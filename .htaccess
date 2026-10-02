@@ -1,0 +1,27 @@
+# Semua request diarahkan ke front controller.
+RewriteEngine On
+
+# --- Blok akses internal & file sensitif (diproses sebelum file statik) ---
+RewriteRule ^(app|data|views)(/|$) - [F,L]
+RewriteRule \.(sqlite|sqlite-wal|sqlite-shm|ini|md)$ - [F,L]
+RewriteRule ^config\.php$ - [F,L]
+RewriteRule ^router\.php$ - [F,L]
+
+# --- Layanan statik apa adanya ---
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# --- Sisanya ke front controller ---
+RewriteRule ^ index.php [L]
+
+# Perlindungan tambahan bila mod_rewrite tidak aktif.
+<FilesMatch "\.(sqlite|sqlite-wal|sqlite-shm|ini|md)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "same-origin"
+</IfModule>

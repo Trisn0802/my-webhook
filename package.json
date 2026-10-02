@@ -1,0 +1,13 @@
+{
+  "name": "my-webhook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Webhook ringan untuk home server — teruskan ke Telegram.",
+  "scripts": {
+    "icons": "node scripts/sync-icons.js",
+    "start": "php -S 127.0.0.1:3010 router.php"
+  },
+  "dependencies": {
+    "bootstrap-icons": "^1.13.1"
+  }
+}
