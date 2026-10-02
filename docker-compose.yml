@@ -8,5 +8,14 @@ services:
     volumes:
       # Database bertahan walau container diganti.
       - ./data:/var/www/html/data
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /var/www/html/data
+        chown -R www-data:www-data /var/www/html/data
+        su -s /bin/sh www-data -c "php -r 'require \"/var/www/html/app/db.php\"; db();'"
+        exec apache2-foreground
     environment:
       - TZ=Asia/Jakarta

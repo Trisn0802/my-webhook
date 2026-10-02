@@ -9,8 +9,15 @@ function db(): PDO
     }
 
     $dir = dirname(__DIR__) . '/data';
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0775, true);
+    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+        http_response_code(500);
+        echo 'Gagal membuat direktori database: ' . htmlspecialchars($dir);
+        exit;
+    }
+    if (!is_writable($dir)) {
+        http_response_code(500);
+        echo 'Direktori database tidak dapat ditulis: ' . htmlspecialchars($dir);
+        exit;
     }
     $file = $dir . '/app.sqlite';
 
