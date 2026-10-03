@@ -7,6 +7,13 @@ $endpoint = absolute_url('/hook/' . $hook['token']);
   <h1 class="h3 mb-0 me-auto"><?= e($hook['name']) ?></h1>
   <span class="badge <?= ((int)$hook['is_active'] === 1) ? 'text-bg-success' : 'text-bg-secondary' ?>"
         data-live-status><?= ((int)$hook['is_active'] === 1) ? 'Aktif' : 'Nonaktif' ?></span>
+  <form method="post" action="<?= e(base_path('/hooks/' . $hook['id'] . '/clone')) ?>" class="m-0">
+    <?= csrf_field() ?>
+    <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" type="submit"
+            title="Clone hook">
+      <i class="bi bi-copy" aria-hidden="true"></i>Clone
+    </button>
+  </form>
   <a class="btn btn-sm btn-outline-primary" href="<?= e(base_path('/hooks/' . $hook['id'] . '/edit')) ?>">Edit</a>
 </div>
 

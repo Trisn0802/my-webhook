@@ -88,7 +88,9 @@ CREATE TABLE IF NOT EXISTS hooks (
     format     TEXT NOT NULL DEFAULT 'json',
     is_active  INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
-);CREATE TABLE IF NOT EXISTS deliveries (
+);
+
+CREATE TABLE IF NOT EXISTS deliveries (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     hook_id     INTEGER NOT NULL REFERENCES hooks(id) ON DELETE CASCADE,
     status      TEXT NOT NULL,
@@ -104,10 +106,31 @@ CREATE TABLE IF NOT EXISTS failed_logins (
     created_at TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_hooks_token   ON hooks(token);
-CREATE INDEX IF NOT EXISTS idx_hooks_user    ON hooks(user_id);
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_hooks_token    ON hooks(token);
+CREATE INDEX IF NOT EXISTS idx_hooks_user     ON hooks(user_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_hook ON deliveries(hook_id, id DESC);
 SQL);
+}
+
+/** Ambil setting lokal aplikasi, null bila belum pernah diatur. */
+function settings_get(string $key): ?string
+{
+    $stmt = db()->prepare('SELECT value FROM settings WHERE key = ?');
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value === false ? null : (string)$value;
+}
+
+/** Simpan setting lokal aplikasi. */
+function settings_set(string $key, string $value): void
+{
+    db()->prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+        ->execute([$key, $value]);
 }
 
 /** Batasi jumlah log per hook (tanpa cron). */

@@ -100,6 +100,9 @@ data/          app.sqlite (dibuat otomatis, jangan ikut di-commit)
 
 - **Tambah Service** — kartu form di atas dashboard: nama, bot token, chat id,
   format pesan, status aktif.
+- **Clone Hook** — duplikasi konfigurasi lengkap (termasuk custom field dan tujuan
+  Chat ID) dengan token endpoint baru; log pengiriman tidak ikut disalin.
+- **Registrasi** bisa dibuka/tutup langsung dari **Pengaturan** tanpa mengedit file.
 - **Custom Field** maks. **6 pasang** per service (nama + nilai). Ditampilkan di
   awal setiap pesan Telegram; baris kosong diabaikan, validasi dilakukan server.
 - **Saran nama** — daftar layanan umum (Uptime Kuma, Grafana, GitHub, dsb) muncul
@@ -120,7 +123,7 @@ data/          app.sqlite (dibuat otomatis, jangan ikut di-commit)
 
 | Konstanta | Fungsi |
 |---|---|
-| `REGISTRATION_OPEN` | `true` = registrasi terbuka; isi **string** (mis. `'rahasia123'`) = registrasi butuh kode; `false` = ditutup. |
+| `REGISTRATION_OPEN` | `true` = registrasi terbuka; isi **string** (mis. `'rahasia123'`) = registrasi butuh kode; `false` = ditutup. Nilai bisa ditimpa kapan saja lewat switch **Registrasi** di menu Pengaturan (tersimpan di database). |
 | `APP_NAME` | Nama tampilan. |
 | `LOG_RETENTION` | Jumlah log per hook yang disimpan (default 200). |
 | `TIMEZONE` | Zona waktu tampilan (default `Asia/Jakarta`). |

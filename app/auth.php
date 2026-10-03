@@ -26,6 +26,15 @@ function require_login(): void
 
 function registration_state(): array
 {
+    // Override dari menu Pengaturan ('0' tertutup, '1' terbuka) mengalahkan config.
+    $override = settings_get('registration_open');
+    if ($override === '0') {
+        return ['open' => false, 'code_required' => false];
+    }
+    if ($override === '1') {
+        return ['open' => true, 'code_required' => false];
+    }
+
     if (REGISTRATION_OPEN === true) {
         return ['open' => true, 'code_required' => false];
     }

@@ -126,7 +126,7 @@
 </div>
 
 <!-- Daftar hook -->
-<h2 class="h5 mb-3">Hook Anda</h2>
+<h2 class="h5 mb-3">Hook</h2>
 
 <?php if (!$hooks): ?>
   <div class="card">
@@ -167,10 +167,18 @@
             <div class="d-flex gap-2">
               <a class="btn btn-sm btn-outline-primary flex-grow-1"
                  href="<?= e(base_path('/hooks/' . $h['id'])) ?>">Detail</a>
+              <form method="post" action="<?= e(base_path('/hooks/' . $h['id'] . '/clone')) ?>" class="m-0">
+                <?= csrf_field() ?>
+                <button class="btn btn-sm btn-outline-secondary" type="submit" title="Clone hook">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span class="visually-hidden">Clone</span>
+                </button>
+              </form>
               <a class="btn btn-sm btn-outline-secondary"
                  href="<?= e(base_path('/hooks/' . $h['id'] . '/edit')) ?>">Edit</a>
               <form method="post" action="<?= e(base_path('/hooks/' . $h['id'] . '/delete')) ?>"
-                    class="m-0" data-confirm="Hapus hook &quot;<?= e($h['name']) ?>&quot; beserta lognya?">
+                    class="m-0" data-confirm-title="Hapus Hook"
+                    data-confirm-message="Hapus hook &quot;<?= e($h['name']) ?>&quot; beserta semua log pengirimannya? Tindakan ini tidak dapat dibatalkan.">
                 <?= csrf_field() ?>
                 <button class="btn btn-sm btn-outline-danger" type="submit">Hapus</button>
               </form>

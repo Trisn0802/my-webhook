@@ -68,7 +68,7 @@ $pageTitle = isset($title) ? $title . ' · ' . APP_NAME : APP_NAME;
       </ul>
       <div class="d-flex align-items-center gap-2">
         <span class="navbar-text small text-body-secondary"><?= e($u['username']) ?></span>
-        <form method="post" action="<?= e(base_path('/logout')) ?>" class="m-0">
+        <form method="post" action="<?= e(base_path('/logout')) ?>" class="m-0" data-confirm-title="Logout" data-confirm-message="Apakah Anda yakin ingin logout?">
           <?= csrf_field() ?>
           <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" type="submit" style="margin-right: 7px;"
                   title="Logout" aria-label="Logout">
@@ -93,9 +93,40 @@ $pageTitle = isset($title) ? $title . ' · ' . APP_NAME : APP_NAME;
   <?= $content ?>
 </main>
 
-<footer class="border-top py-3 text-center text-body-secondary small">
-  <?= e(APP_NAME) ?> · webhook ringan untuk Telegram
+<footer class="border-top py-3 text-body-secondary small">
+
+  <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+    <div class="align-item-center gap-2">
+      <?= e(APP_NAME) ?> · webhook ringan untuk Telegram
+    </div>
+    
+    <div class="align-item-center gap-2">
+      Made by <a class="link-body-emphasis link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href="https://trisna-info.pages.dev" target="_blank" rel="noopener noreferrer">Trisna Almuti</a>
+    </div>
+  </div>
+  
 </footer>
+
+<?php if ($u): ?>
+<!-- Modal konfirmasi generik (logout / hapus hook) -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-6" id="confirmModalLabel">Konfirmasi</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body" id="confirmModalMessage">
+        Apakah Anda yakin?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="confirmModalOk">Ya, lanjutkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <script src="<?= e(base_path('/assets/vendor/bootstrap.bundle.min.js')) ?>"></script>
 <script src="<?= e(base_path('/assets/js/app.js?v=' . filemtime('assets/js/app.js'))) ?>"></script>

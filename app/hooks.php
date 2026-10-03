@@ -158,6 +158,41 @@ function hook_save(array $in, int $userId, ?int $id = null): array
     return [true, 'Hook berhasil diperbarui.'];
 }
 
+function hook_clone(array $source, int $userId): int
+{
+    $baseName = trim((string)$source['name']) . ' (salinan)';
+    $name = $baseName;
+    $attempt = 2;
+    $check = db()->prepare('SELECT 1 FROM hooks WHERE user_id = ? AND name = ? LIMIT 1');
+
+    while (true) {
+        $check->execute([$userId, $name]);
+        if (!$check->fetchColumn()) {
+            break;
+        }
+        $name = trim((string)$source['name']) . ' (salinan ' . $attempt . ')';
+        $attempt++;
+    }
+
+    $stmt = db()->prepare(
+        'INSERT INTO hooks (user_id, name, token, bot_token, chat_id, format, is_active, custom_fields, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    $stmt->execute([
+        $userId,
+        $name,
+        hook_new_token(),
+        (string)$source['bot_token'],
+        (string)$source['chat_id'],
+        (string)$source['format'],
+        (int)$source['is_active'],
+        (string)($source['custom_fields'] ?? '[]'),
+        now(),
+    ]);
+
+    return (int)db()->lastInsertId();
+}
+
 function hook_delete(int $id): void
 {
     db()->prepare('DELETE FROM hooks WHERE id = ?')->execute([$id]);

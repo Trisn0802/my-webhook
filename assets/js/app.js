@@ -173,13 +173,68 @@
     }
   });
 
-  // --- Konfirmasi hapus ---
+  // --- Konfirmasi dengan modal Bootstrap (logout, hapus hook) ---
+  // Form dengan data-confirm-title / data-confirm-message menampilkan modal
+  // alih-alih window.confirm bawaan peramban.
+  var pendingForm = null;    // form yang menunggu persetujuan user
+  var approvedForm = null;   // form yang sudah disetujui → submit berikutnya dilewati
+  var confirmModal = null;
+
+  function getConfirmModal() {
+    if (confirmModal) return confirmModal;
+    var el = document.getElementById('confirmModal');
+    if (!el || typeof bootstrap === 'undefined') return null;
+    confirmModal = new bootstrap.Modal(el);
+    el.addEventListener('show.bs.modal', function () {
+      var title = (pendingForm && pendingForm.getAttribute('data-confirm-title')) || 'Konfirmasi';
+      var msg = (pendingForm && pendingForm.getAttribute('data-confirm-message')) || 'Apakah Anda yakin?';
+      document.getElementById('confirmModalLabel').textContent = title;
+      document.getElementById('confirmModalMessage').textContent = msg;
+    });
+    // Ditolak (tombol Batal / klik luar / Esc): batalkan pengiriman.
+    el.addEventListener('hidden.bs.modal', function () {
+      pendingForm = null;
+    });
+    return confirmModal;
+  }
+
+  document.addEventListener('click', function (ev) {
+    var okBtn = ev.target.closest('#confirmModalOk');
+    if (!okBtn) return;
+    ev.preventDefault();
+    var form = pendingForm;
+    pendingForm = null;
+    approvedForm = form;
+    if (confirmModal) confirmModal.hide();
+    // Kirim form setelah modal mulai menutup (hindari dialog diblokir browser).
+    setTimeout(function () {
+      if (!form) return;
+      form.requestSubmit ? form.requestSubmit() : form.submit();
+      approvedForm = null;
+    }, 200);
+  });
+
   document.addEventListener('submit', function (ev) {
     var form = ev.target;
-    var msg = form.getAttribute('data-confirm');
-    if (msg && !window.confirm(msg)) {
-      ev.preventDefault();
+    var msg = form.getAttribute('data-confirm-message');
+    if (!msg) return;
+
+    // Sudah disetujui lewat modal → lanjutkan pengiriman.
+    if (approvedForm === form) {
+      approvedForm = null;
+      return;
     }
+
+    ev.preventDefault();
+    var modal = getConfirmModal();
+    if (!modal) {
+      // Fallback bila Bootstrap JS belum termuat: dialog bawaan peramban.
+      var title = form.getAttribute('data-confirm-title') || 'Konfirmasi';
+      if (window.confirm(title + '\n' + msg)) form.submit();
+      return;
+    }
+    pendingForm = form;
+    modal.show();
   });
 
   // =====================================================================

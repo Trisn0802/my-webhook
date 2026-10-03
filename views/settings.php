@@ -40,6 +40,27 @@
       </div>
     </div>
 
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Registrasi</div>
+      <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="small text-body-secondary">
+          Saat ditutup, tidak ada akun baru yang dapat mendaftar.
+        </div>
+        <form method="post" action="<?= e(base_path('/settings/register')) ?>" class="m-0">
+          <?= csrf_field() ?>
+          <input type="hidden" name="value" value="0">
+          <div class="form-check form-switch m-0">
+            <input class="form-check-input" type="checkbox" role="switch" id="reg_switch"
+                   name="value" value="1" onchange="this.form.submit()"
+                   <?= registration_state()['open'] ? 'checked' : '' ?>>
+            <label class="form-check-label" for="reg_switch">
+              Registrasi <?= registration_state()['open'] ? 'Terbuka' : 'Tertutup' ?>
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header fw-semibold">Tema</div>
       <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">

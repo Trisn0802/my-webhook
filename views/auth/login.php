@@ -31,8 +31,10 @@
         </form>
 
         <p class="text-center small text-body-secondary mt-4 mb-0">
-          Belum punya akun?
-          <a href="<?= e(base_path('/register')) ?>">Daftar</a>
+          <?php if (registration_state()['open']): ?>
+            Belum punya akun?
+            <a href="<?= e(base_path('/register')) ?>">Daftar</a>
+          <?php endif; ?>
         </p>
       </div>
     </div>

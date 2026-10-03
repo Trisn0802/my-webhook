@@ -139,6 +139,19 @@ $routes = [
         flash($ok ? 'success' : 'danger', $msg);
         redirect($ok ? '/hooks/' . $hook['id'] : '/hooks/' . $id . '/edit');
     }],
+    ['POST', '#^/hooks/(\d+)/clone$#', function (string $id) {
+        require_login();
+        verify_csrf();
+        $source = hook_owned((int)$id, (int)$_SESSION['user_id']);
+        if (!$source) {
+            http_response_code(404);
+            view('errors/404', ['user' => current_user()]);
+            return;
+        }
+        $newId = hook_clone($source, (int)$_SESSION['user_id']);
+        flash('success', 'Hook berhasil diduplikasi. Silakan sesuaikan namanya.');
+        redirect('/hooks/' . $newId . '/edit');
+    }],
     ['POST', '#^/hooks/(\d+)/delete$#', function (string $id) {
         require_login();
         verify_csrf();
@@ -215,6 +228,14 @@ $routes = [
     ['GET', '#^/settings$#', function () {
         require_login();
         view('settings', ['user' => current_user()]);
+    }],
+    ['POST', '#^/settings/register$#', function () {
+        require_login();
+        verify_csrf();
+        $isOpen = (($_POST['value'] ?? '0') === '1');
+        settings_set('registration_open', $isOpen ? '1' : '0');
+        flash('success', $isOpen ? 'Registrasi dibuka.' : 'Registrasi ditutup.');
+        redirect('/settings');
     }],
     ['POST', '#^/settings$#', function () {
         require_login();
