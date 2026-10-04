@@ -22,18 +22,68 @@ function hook_find_by_token(string $token): ?array
     return $row ?: null;
 }
 
-function hooks_for_user(int $userId): array
+/**
+ * Hook milik user dengan search, filter status, dan pagination.
+ *
+ * $f['q']        — cari di nama / token
+ * $f['status']   — 'all' | 'active' | 'inactive'
+ * $f['page']     — nomor halaman (1-based)
+ * $f['per_page'] — batas per halaman (dashboard: 6)
+ *
+ * @return array{hooks: array, total: int, page: int, per_page: int, pages: int}
+ */
+function hooks_for_user(int $userId, array $f = []): array
 {
+    $perPage = (int)($f['per_page'] ?? 6);
+    $perPage = max(1, min($perPage, 100));
+
+    $where  = ['h.user_id = ?'];
+    $params = [$userId];
+
+    $q = trim((string)($f['q'] ?? ''));
+    if ($q !== '') {
+        $where[] = '(h.name LIKE ? OR h.token LIKE ?)';
+        $like = '%' . $q . '%';
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $status = $f['status'] ?? 'all';
+    if ($status === 'active') {
+        $where[] = 'h.is_active = 1';
+    } elseif ($status === 'inactive') {
+        $where[] = 'h.is_active = 0';
+    }
+
+    $whereSql = implode(' AND ', $where);
+
+    $count = db()->prepare("SELECT COUNT(*) FROM hooks h WHERE {$whereSql}");
+    $count->execute($params);
+    $total = (int)$count->fetchColumn();
+
+    $pages = max(1, (int)ceil($total / $perPage));
+    $page  = (int)($f['page'] ?? 1);
+    $page  = max(1, min($page, $pages));
+    $offset = ($page - 1) * $perPage;
+
     $stmt = db()->prepare(
-        'SELECT h.*,
+        "SELECT h.*,
                 (SELECT COUNT(*) FROM deliveries d WHERE d.hook_id = h.id) AS total,
                 (SELECT created_at FROM deliveries d WHERE d.hook_id = h.id ORDER BY d.id DESC LIMIT 1) AS last_at
            FROM hooks h
-          WHERE h.user_id = ?
-          ORDER BY h.id DESC'
+          WHERE {$whereSql}
+          ORDER BY h.id DESC
+          LIMIT ? OFFSET ?"
     );
-    $stmt->execute([$userId]);
-    return $stmt->fetchAll();
+    $stmt->execute(array_merge($params, [$perPage, $offset]));
+
+    return [
+        'hooks'    => $stmt->fetchAll(),
+        'total'    => $total,
+        'page'     => $page,
+        'per_page' => $perPage,
+        'pages'    => $pages,
+    ];
 }
 
 function hook_owned(int $id, int $userId): ?array
@@ -205,6 +255,119 @@ function hook_log(int $hookId, int $limit = 50): array
     );
     $stmt->execute([$hookId, $limit]);
     return $stmt->fetchAll();
+}
+
+/**
+ * Ukuran halaman log yang ditawarkan di UI.
+ */
+const HOOK_LOG_PER_PAGE = [10, 25, 50, 100];
+
+/**
+ * Pilih nilai per_page yang sah (whitelist), default 10.
+ */
+function hook_log_per_page(?string $value): int
+{
+    $v = (int)($value ?? 0);
+    return in_array($v, HOOK_LOG_PER_PAGE, true) ? $v : 10;
+}
+
+/**
+ * Log pengiriman dengan search, filter status/tanggal, dan pagination.
+ *
+ * $f['q']        — cari di payload / detail
+ * $f['status']   — 'all' | 'sent' | 'failed'
+ * $f['date_from'] / $f['date_to'] — YYYY-MM-DD (inklusif)
+ * $f['page']     — nomor halaman (1-based)
+ * $f['per_page'] — 10|25|50|100
+ *
+ * @return array{logs: array, total: int, page: int, per_page: int, pages: int}
+ */
+function hook_log_paged(int $hookId, array $f): array
+{
+    $per = hook_log_per_page($f['per_page'] ?? null);
+
+    $where  = ['hook_id = ?'];
+    $params = [$hookId];
+
+    $q = trim((string)($f['q'] ?? ''));
+    if ($q !== '') {
+        $where[] = '(payload LIKE ? OR detail LIKE ?)';
+        $like = '%' . $q . '%';
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $status = $f['status'] ?? 'all';
+    if (in_array($status, ['sent', 'failed'], true)) {
+        $where[] = 'status = ?';
+        $params[] = $status;
+    }
+
+    $from = $f['date_from'] ?? '';
+    if (is_string($from) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) {
+        $where[] = 'created_at >= ?';
+        $params[] = $from . ' 00:00:00';
+    }
+    $to = $f['date_to'] ?? '';
+    if (is_string($to) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+        // Inklusif: batas atas = awal hari berikutnya.
+        $next = date('Y-m-d', strtotime($to . ' +1 day'));
+        $where[] = 'created_at < ?';
+        $params[] = $next . ' 00:00:00';
+    }
+
+    $whereSql = implode(' AND ', $where);
+
+    $count = db()->prepare("SELECT COUNT(*) FROM deliveries WHERE {$whereSql}");
+    $count->execute($params);
+    $total = (int)$count->fetchColumn();
+
+    $pages = max(1, (int)ceil($total / $per));
+    $page  = (int)($f['page'] ?? 1);
+    $page  = max(1, min($page, $pages));
+    $offset = ($page - 1) * $per;
+
+    $stmt = db()->prepare(
+        "SELECT * FROM deliveries WHERE {$whereSql} ORDER BY id DESC LIMIT ? OFFSET ?"
+    );
+    $stmt->execute(array_merge($params, [$per, $offset]));
+
+    return [
+        'logs'     => $stmt->fetchAll(),
+        'total'    => $total,
+        'page'     => $page,
+        'per_page' => $per,
+        'pages'    => $pages,
+    ];
+}
+
+/**
+ * Ambil & bersihkan parameter filter log dari query string.
+ * Dipakai oleh rute detail hook dan endpoint /api/live.
+ */
+function log_filter_params(array $get): array
+{
+    return [
+        'q'         => trim((string)($get['q'] ?? '')),
+        'status'    => in_array($get['status'] ?? '', ['sent', 'failed'], true) ? $get['status'] : 'all',
+        'date_from' => (string)($get['from'] ?? ''),
+        'date_to'   => (string)($get['to'] ?? ''),
+        'page'      => (int)($get['page'] ?? 1),
+        'per_page'  => hook_log_per_page($get['per_page'] ?? null),
+    ];
+}
+
+/**
+ * Ambil & bersihkan parameter filter daftar hook dari query string.
+ */
+function hook_filter_params(array $get, int $perPage = 6): array
+{
+    return [
+        'q'        => trim((string)($get['q'] ?? '')),
+        'status'   => in_array($get['status'] ?? '', ['active', 'inactive'], true) ? $get['status'] : 'all',
+        'page'     => (int)($get['page'] ?? 1),
+        'per_page' => $perPage,
+    ];
 }
 
 function hook_stats(int $userId): array

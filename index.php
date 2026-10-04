@@ -83,10 +83,12 @@ $routes = [
     // --- Dashboard ---
     ['GET', '#^/dashboard$#', function () {
         require_login();
+        $f = hook_filter_params($_GET, 6);
         view('dashboard', [
-            'user'  => current_user(),
-            'hooks' => hooks_for_user((int)$_SESSION['user_id']),
-            'stats' => hook_stats((int)$_SESSION['user_id']),
+            'user'   => current_user(),
+            'hooks'  => hooks_for_user((int)$_SESSION['user_id'], $f),
+            'filter' => $f,
+            'stats'  => hook_stats((int)$_SESSION['user_id']),
         ]);
     }],
 
@@ -110,10 +112,12 @@ $routes = [
             view('errors/404', ['user' => current_user()]);
             return;
         }
+        $f = log_filter_params($_GET);
         view('hooks/detail', [
-            'hook' => $hook,
-            'logs' => hook_log((int)$hook['id'], 50),
-            'user' => current_user(),
+            'hook'   => $hook,
+            'paged'  => hook_log_paged((int)$hook['id'], $f),
+            'filter' => $f,
+            'user'   => current_user(),
         ]);
     }],
     ['GET', '#^/hooks/(\d+)/edit$#', function (string $id) {
@@ -178,33 +182,31 @@ $routes = [
         require_login();
         $uid = (int)$_SESSION['user_id'];
 
-        // Dashboard: statistik + ringkasan tiap hook.
-        $summary = [
-            'stats' => hook_stats($uid),
-            'hooks' => [],
-            'time'  => date('Y-m-d H:i:s'),
-        ];
-        foreach (hooks_for_user($uid) as $h) {
-            $summary['hooks'][] = [
-                'id'        => (int)$h['id'],
-                'total'     => (int)$h['total'],
-                'last_at'   => $h['last_at'],
-                'last_ago'  => $h['last_at'] ? time_ago($h['last_at']) : null,
-                'is_active' => (int)$h['is_active'],
+        // Dashboard: statistik global + daftar hook (terfilter & paginasi).
+        $hookFilter = hook_filter_params($_GET, 6);
+        $hooksPage  = hooks_for_user($uid, $hookFilter);
+        $hookItems  = [];
+        foreach ($hooksPage['hooks'] as $h) {
+            $hookItems[] = [
+                'id'         => (int)$h['id'],
+                'name'       => $h['name'],
+                'endpoint'   => absolute_url('/hook/' . $h['token']),
+                'total'      => (int)$h['total'],
+                'last_at'    => $h['last_at'],
+                'last_ago'   => $h['last_at'] ? time_ago($h['last_at']) : null,
+                'is_active'  => (int)$h['is_active'],
             ];
         }
 
-        // Detail hook: status aktif + log pengiriman terbaru.
+        // Detail hook: status aktif + log pengiriman terfilter & paginasi.
         $detailId = isset($_GET['hook']) ? (int)$_GET['hook'] : 0;
         $detail = null;
         if ($detailId > 0 && ($hook = hook_owned($detailId, $uid))) {
-            $detail = [
-                'id'        => (int)$hook['id'],
-                'is_active' => (int)$hook['is_active'],
-                'logs'      => [],
-            ];
-            foreach (hook_log((int)$hook['id'], 30) as $l) {
-                $detail['logs'][] = [
+            $logFilter = log_filter_params($_GET);
+            $logPage   = hook_log_paged((int)$hook['id'], $logFilter);
+            $logItems  = [];
+            foreach ($logPage['logs'] as $l) {
+                $logItems[] = [
                     'id'         => (int)$l['id'],
                     'status'     => $l['status'],
                     'detail'     => $l['detail'],
@@ -213,10 +215,27 @@ $routes = [
                     'ago'        => time_ago($l['created_at']),
                 ];
             }
+            $detail = [
+                'id'         => (int)$hook['id'],
+                'is_active'  => (int)$hook['is_active'],
+                'logs'       => $logItems,
+                'logs_total' => $logPage['total'],
+                'logs_page'  => $logPage['page'],
+                'logs_pages' => $logPage['pages'],
+                'per_page'   => $logPage['per_page'],
+            ];
         }
 
-        json_out(['ok' => true, 'stats' => $summary['stats'], 'hooks' => $summary['hooks'],
-                  'time' => $summary['time'], 'detail' => $detail]);
+        json_out([
+            'ok'           => true,
+            'stats'        => hook_stats($uid),
+            'time'         => date('Y-m-d H:i:s'),
+            'hooks'        => $hookItems,
+            'hooks_total'  => $hooksPage['total'],
+            'hooks_page'   => $hooksPage['page'],
+            'hooks_pages'  => $hooksPage['pages'],
+            'detail'       => $detail,
+        ]);
     }],
 
     // --- Endpoint webhook publik (dipanggil layanan eksternal) ---

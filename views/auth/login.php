@@ -9,7 +9,7 @@
             <span class="bi bi-box-arrow-in-right text-primary d-block mb-3" style="font-size:2.75rem" aria-hidden="true"></span>
           </center>
           <h1 class="h4 mb-1">Masuk ke <?= e(APP_NAME) ?></h1>
-          <p class="text-body-secondary small mb-0">Kelola webhook menuju Telegram Anda.</p>
+          <p class="text-body-secondary small mb-0">Webhook manager untukTelegram Anda.</p>
         </div>
 
         <form method="post" action="<?= e(base_path('/login')) ?>" novalidate>

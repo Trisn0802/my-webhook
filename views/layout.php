@@ -40,6 +40,11 @@ $pageTitle = isset($title) ? $title . ' · ' . APP_NAME : APP_NAME;
     </a>
 
     <div class="d-flex align-items-center gap-2 order-lg-3">
+      <span class="navbar-text small text-body-secondary d-flex align-items-center gap-1"
+            title="Aplikasi aktif" aria-label="Aplikasi aktif">
+        <span class="live-dot is-on" aria-hidden="true"></span>Live
+      </span>
+
       <button class="btn btn-sm btn-outline-secondary" id="themeToggle" type="button"
               title="Ganti tema" aria-label="Ganti tema terang/gelap">
         <span class="bi bi-moon-fill" aria-hidden="true"></span>

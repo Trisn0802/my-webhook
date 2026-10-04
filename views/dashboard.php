@@ -128,17 +128,77 @@
 <!-- Daftar hook -->
 <h2 class="h5 mb-3">Hook</h2>
 
-<?php if (!$hooks): ?>
-  <div class="card">
+<?php
+$hookItems = $hooks['hooks'];
+$hookTotal = (int)$hooks['total'];
+$hookPage = (int)$hooks['page'];
+$hookPages = (int)$hooks['pages'];
+$hookHasFilter = ($filter['q'] !== '') || $filter['status'] !== 'all';
+$hookFrom = $hookTotal ? (($hookPage - 1) * 6 + 1) : 0;
+$hookTo = min($hookPage * 6, $hookTotal);
+$hookQuery = static function (int $page) use ($filter): string {
+    return http_build_query([
+        'q' => $filter['q'],
+        'status' => $filter['status'],
+        'page' => $page,
+    ]);
+};
+?>
+
+<!-- Filter hook -->
+<form method="get" action="<?= e(base_path('/dashboard')) ?>" class="mb-3" id="hookFilterForm">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-5">
+      <label class="form-label small mb-1" for="hook_q">Cari</label>
+      <input class="form-control form-control-sm" id="hook_q" name="q" type="search"
+             value="<?= e($filter['q']) ?>" placeholder="Nama atau token…" autocomplete="off">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-1" for="hook_status">Status</label>
+      <select class="form-select form-select-sm" id="hook_status" name="status">
+        <option value="all" <?= $filter['status'] === 'all' ? 'selected' : '' ?>>Semua</option>
+        <option value="active" <?= $filter['status'] === 'active' ? 'selected' : '' ?>>Aktif</option>
+        <option value="inactive" <?= $filter['status'] === 'inactive' ? 'selected' : '' ?>>Nonaktif</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-2 d-grid">
+      <button class="btn btn-sm btn-primary" type="submit">Cari</button>
+    </div>
+    <div class="col-12 col-md-2">
+      <small class="text-body-secondary d-block mt-md-0 mt-1" id="hookSummary">
+        Menampilkan <?= $hookFrom ?>–<?= $hookTo ?> dari <?= $hookTotal ?> hook
+      </small>
+    </div>
+  </div>
+  <input type="hidden" name="page" value="1">
+</form>
+
+<?php if (!$hookItems && !$hookHasFilter): ?>
+  <div class="card mb-3" id="hookEmpty">
     <div class="card-body text-center py-5">
       <span class="bi bi-broadcast d-block mb-3 text-secondary" style="font-size:2.75rem" aria-hidden="true"></span>
       <p class="mb-3">Belum ada hook. Buat satu untuk mulai menerima webhook.</p>
       <a class="btn btn-primary" href="<?= e(base_path('/hooks/new')) ?>">Buat hook pertama</a>
     </div>
   </div>
+<?php elseif (!$hookItems): ?>
+  <div class="card mb-3" id="hookEmpty">
+    <div class="card-body text-center text-body-secondary py-5">
+      Tidak ada hook yang cocok dengan filter saat ini.
+    </div>
+  </div>
 <?php else: ?>
-  <div class="row g-3">
-    <?php foreach ($hooks as $h): ?>
+  <div class="card mb-3 d-none" id="hookEmpty">
+    <div class="card-body text-center py-5">
+      <span class="bi bi-broadcast d-block mb-3 text-secondary" style="font-size:2.75rem" aria-hidden="true"></span>
+      <p class="mb-3" id="hookEmptyText">Belum ada hook. Buat satu untuk mulai menerima webhook.</p>
+      <a class="btn btn-primary" href="<?= e(base_path('/hooks/new')) ?>">Buat hook pertama</a>
+    </div>
+  </div>
+<?php endif; ?>
+
+<div class="row g-3 <?= $hookItems ? '' : 'd-none' ?>" id="hookList">
+    <?php foreach ($hookItems as $h): ?>
       <?php $endpoint = absolute_url('/hook/' . $h['token']); ?>
       <div class="col-12 col-md-6 col-xl-4">
         <div class="card h-100 hook-card" data-hook-card="<?= (int)$h['id'] ?>">
@@ -187,5 +247,25 @@
         </div>
       </div>
     <?php endforeach; ?>
-  </div>
+</div>
+
+<!-- Pagination hook (6 per halaman) -->
+<?php if ($hookPages > 1): ?>
+  <nav class="mt-3" aria-label="Halaman daftar hook" id="hookPager">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-1">
+      <div class="btn-group" role="group" aria-label="Navigasi halaman">
+        <?php if ($hookPage > 1): ?>
+          <a class="btn btn-sm btn-outline-secondary"
+             href="<?= e(base_path('/dashboard?' . $hookQuery($hookPage - 1))) ?>">&lsaquo; Sebelumnya</a>
+        <?php endif; ?>
+        <?php if ($hookPage < $hookPages): ?>
+          <a class="btn btn-sm btn-outline-secondary"
+             href="<?= e(base_path('/dashboard?' . $hookQuery($hookPage + 1))) ?>">Berikutnya &rsaquo;</a>
+        <?php endif; ?>
+      </div>
+      <small class="text-body-secondary">Halaman <?= $hookPage ?> / <?= $hookPages ?></small>
+    </div>
+  </nav>
+<?php else: ?>
+  <nav aria-label="Halaman daftar hook" class="d-none" id="hookPager"></nav>
 <?php endif; ?>
