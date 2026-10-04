@@ -44,7 +44,7 @@
       <div class="card-header fw-semibold">Registrasi</div>
       <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="small text-body-secondary">
-          Saat ditutup, tidak ada akun baru yang dapat mendaftar.
+          Nonaktifkan registrasi untuk mencegah pengguna baru mendaftar.
         </div>
         <form method="post" action="<?= e(base_path('/settings/register')) ?>" class="m-0">
           <?= csrf_field() ?>
