@@ -43,6 +43,24 @@ function absolute_url(string $path): string
     return ($https ? 'https' : 'http') . '://' . $host . base_path($path);
 }
 
+/** URL Shoutrrr Generic untuk meneruskan notifikasi Beszel sebagai JSON. */
+function shoutrrr_generic_url(string $endpoint): string
+{
+    $parts = parse_url($endpoint);
+    if (!is_array($parts) || !in_array($parts['scheme'] ?? '', ['http', 'https'], true) || empty($parts['host'])) {
+        return '';
+    }
+
+    $query = [];
+    if (!empty($parts['query'])) {
+        parse_str($parts['query'], $query);
+    }
+    $query['template'] = 'json';
+
+    $authority = $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
+    return 'generic://' . $authority . ($parts['path'] ?? '/') . '?' . http_build_query($query);
+}
+
 function flash(string $type, string $message): void
 {
     $_SESSION['flash'][] = ['type' => $type, 'message' => $message];

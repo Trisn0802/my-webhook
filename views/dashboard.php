@@ -200,6 +200,7 @@ $hookQuery = static function (int $page) use ($filter): string {
 <div class="row g-3 <?= $hookItems ? '' : 'd-none' ?>" id="hookList">
     <?php foreach ($hookItems as $h): ?>
       <?php $endpoint = absolute_url('/hook/' . $h['token']); ?>
+      <?php $genericEndpoint = shoutrrr_generic_url($endpoint); ?>
       <div class="col-12 col-md-6 col-xl-4">
         <div class="card h-100 hook-card" data-hook-card="<?= (int)$h['id'] ?>">
           <div class="card-body">
@@ -216,6 +217,18 @@ $hookQuery = static function (int $page) use ($filter): string {
               <button class="btn btn-outline-secondary btn-copy" type="button"
                       data-copy="<?= e($endpoint) ?>" title="Salin URL">Salin</button>
             </div>
+            <?php if ($genericEndpoint !== ''): ?>
+              <label class="form-label small text-body-secondary mb-1" for="genericEndpoint-<?= (int)$h['id'] ?>">
+                Generic
+              </label>
+              <div class="input-group input-group-sm mb-3">
+                <input class="form-control font-monospace endpoint-input"
+                       id="genericEndpoint-<?= (int)$h['id'] ?>" type="text" readonly
+                       value="<?= e($genericEndpoint) ?>" aria-label="URL Shoutrrr Generic">
+                <button class="btn btn-outline-secondary btn-copy" type="button"
+                        data-copy="<?= e($genericEndpoint) ?>" title="Salin URL Generic">Salin</button>
+              </div>
+            <?php endif; ?>
 
             <div class="d-flex justify-content-between small text-body-secondary mb-3">
               <span data-live-total="<?= (int)$h['total'] ?>"><strong><?= (int)$h['total'] ?></strong> kirim</span>

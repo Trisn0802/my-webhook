@@ -310,12 +310,24 @@
       '</div></div>';
   }
 
+  function shoutrrrGenericUrl(endpoint) {
+    try {
+      var url = new URL(endpoint, window.location.origin);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+      url.searchParams.set('template', 'json');
+      return 'generic://' + url.host + url.pathname + url.search;
+    } catch (e) {
+      return '';
+    }
+  }
+
   function hookCardHtml(h) {
     var active = Number(h.is_active) === 1;
     var csrf = document.querySelector('input[name="_csrf"]');
     var token = csrf ? csrf.value : '';
     var base = '/hooks/' + Number(h.id);
     var endpoint = safeText(h.endpoint);
+    var genericEndpoint = safeText(shoutrrrGenericUrl(h.endpoint));
     var name = safeText(h.name);
     var count = Number(h.total || 0);
     var last = h.last_at ? 'terakhir ' + safeText(h.last_ago || '') : 'belum ada';
@@ -326,6 +338,10 @@
       '</div><div class="input-group input-group-sm mb-3">' +
         '<input class="form-control form-control-sm font-monospace endpoint-input" type="text" readonly value="' + endpoint + '" aria-label="URL endpoint">' +
         '<button class="btn btn-outline-secondary btn-copy" type="button" data-copy="' + endpoint + '" title="Salin URL">Salin</button>' +
+      '</div><label class="form-label small text-body-secondary mb-1" for="genericEndpoint-' + Number(h.id) + '">Generic</label>' +
+      '<div class="input-group input-group-sm mb-3">' +
+        '<input class="form-control form-control-sm font-monospace endpoint-input" id="genericEndpoint-' + Number(h.id) + '" type="text" readonly value="' + genericEndpoint + '" aria-label="URL Shoutrrr Generic">' +
+        '<button class="btn btn-outline-secondary btn-copy" type="button" data-copy="' + genericEndpoint + '" title="Salin URL Generic">Salin</button>' +
       '</div><div class="d-flex justify-content-between small text-body-secondary mb-3">' +
         '<span data-live-total="' + count + '"><strong>' + count + '</strong> kirim</span>' +
         '<span data-live-last="' + safeText(h.last_at || '') + '">' + last + '</span>' +

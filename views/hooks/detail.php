@@ -1,6 +1,7 @@
 <?php
 $title = $hook['name'];
 $endpoint = absolute_url('/hook/' . $hook['token']);
+$genericEndpoint = shoutrrr_generic_url($endpoint);
 $logs = $paged['logs'];
 $totalLogs = (int)$paged['total'];
 $currentPage = (int)$paged['page'];
@@ -46,6 +47,15 @@ $logQuery = static function (int $page) use ($hook, $filter, $perPage): string {
           <button class="btn btn-outline-secondary btn-copy" type="button"
                   data-copy="<?= e($endpoint) ?>">Salin</button>
         </div>
+        <?php if ($genericEndpoint !== ''): ?>
+          <label class="form-label small text-body-secondary mb-1" for="genericEndpoint">Generic</label>
+          <div class="input-group mb-3">
+            <input class="form-control font-monospace" id="genericEndpoint" type="text" readonly
+                   value="<?= e($genericEndpoint) ?>" aria-label="URL Shoutrrr Generic">
+            <button class="btn btn-outline-secondary btn-copy" type="button"
+                    data-copy="<?= e($genericEndpoint) ?>" title="Salin URL Generic">Salin</button>
+          </div>
+        <?php endif; ?>
         <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-outline-primary" type="button"
                   data-test-url="<?= e(base_path('/hooks/' . $hook['id'] . '/test')) ?>">
